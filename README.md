@@ -1,1 +1,3 @@
 # ProjektPSW
+
+Grzegorz Alwasiak
