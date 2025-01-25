@@ -1,0 +1,34 @@
+.rating-card {
+    font-size: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rating-card h2 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.rating-card button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.rating-card button:hover {
+    background-color: #0056b3;
+}
+
+.rating-card:hover {
+    background-color: #e0e0e0; /* Slightly darker grey */
+    border-color: #aaa; /* Darker border */
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+    cursor: pointer; /* Change cursor to pointer */
+  }

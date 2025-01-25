@@ -1,0 +1,89 @@
+.header {
+    position: fixed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 10px 20px;
+    height: 80px;
+    width: 100%; 
+    top: 0;
+    left: 0;
+    right: 0;
+    border-bottom: 1px rgba(0, 0, 0, 0.103) solid;
+    z-index: 1000;
+  }
+  
+  .user img,
+  .menu img {
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
+    cursor: pointer;
+  }
+  
+  .logo img {
+    height: 60px;
+    width: auto;
+    cursor: pointer;
+  }
+  
+  /* Remove fixed width for .menu and .user */
+  .menu,
+  .user {
+    display: flex; /* Allows flexibility in positioning */
+    align-items: center; /* Centers the icons vertically */
+    position: relative; /* Needed for dropdown positioning */
+  }
+  
+  .user {
+    margin-right: 50px;
+  }
+  
+  .logo img:hover,
+  .user img:hover,
+  .menu img:hover {
+    transform: scale(1.1); /* Makes the icon 20% bigger */
+    transition: transform 0.3s ease, filter 0.3s ease; /* Smooth transition for both scale and filter */
+  }
+  
+  /* Dropdown Styling */
+  .dropdown {
+    position: absolute;
+    top: 100%; /* Position below the icon */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for perfect centering */
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1001; /* Ensure it appears above the header */
+    margin-top: 10px; /* Add some space between the icon and dropdown */
+    min-width: 150px; /* Set a minimum width */
+  }
+  
+  .menu .dropdown {
+    left: 0; /* Align to the left edge of the menu icon */
+    transform: translateX(0); /* Remove centering */
+  }
+  .user .dropdown {
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for perfect centering */
+  }
+  .dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .dropdown li {
+    padding: 10px 20px;
+    cursor: pointer;
+    white-space: nowrap; /* Prevent text wrapping */
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .dropdown li:hover {
+    background-color: #f5f5f5; /* Light gray background on hover */
+  }

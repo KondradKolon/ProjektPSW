@@ -1,10 +1,15 @@
-
-
+import Counter1 from "./Counter"
+import Header from "./Header"
+import RatingCard from "./RatingCard"
+// import CreateSurvey from "./CreateSurvey.jsx"
 function App() {
   return (
     <>
-      <h1>Hello World</h1>  
+      <Header/>
+      <RatingCard question="Jak sie dzisiaj czujesz"/>
+      <Counter1/>
     </>
+    
   )
 }
 
