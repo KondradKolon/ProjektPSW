@@ -15,13 +15,13 @@ const LoginForm = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
-                credentials: 'include', // Wymagane do obsługi ciasteczek
+                credentials: 'include', // ciasteczka
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                navigate('/'); // Przekieruj na stronę główną po zalogowaniu
+                navigate('/');
             } else {
                 setError(data.message || 'Błąd logowania');
             }

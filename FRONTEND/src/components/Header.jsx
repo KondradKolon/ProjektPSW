@@ -5,13 +5,11 @@ import menu from '../assets/menu.png';
 import user from '../assets/user.png';
 import '../styles/Header.css';
 
-function Header() {
+export default function Header() {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isUserOpen, setUserOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -38,7 +36,7 @@ function Header() {
 
   return (
     <header className="header">
-      {/* Menu Icon and Dropdown */}
+
       <div className="menu" ref={dropdownRef} onClick={() => toggleDropdown('menu')}>
         <img src={menu} alt="menu" />
         {isMenuOpen && (
@@ -71,5 +69,3 @@ function Header() {
     </header>
   );
 }
-
-export default Header;
