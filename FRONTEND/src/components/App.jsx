@@ -7,6 +7,7 @@ import SignUpForm from './SignupForm';
 import HomePage from './HomePage';
 import CreateSurvey from './CreateSurvey';
 import SurveyPage from './SurveyPage';
+
 function App() {
     return (
         <Router>
@@ -17,6 +18,7 @@ function App() {
                     <Route path="/login" element={<LoginForm />} />
                     <Route path="/signup" element={<SignUpForm />} />
                     <Route path="/create-survey" element={<CreateSurvey />} />
+                    
                     <Route path="/survey/:id" element={<SurveyPage />} />
                 </Routes>
                 <Footer />

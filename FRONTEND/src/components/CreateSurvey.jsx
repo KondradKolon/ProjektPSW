@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext"; // Importujemy useAuth
+
 export default function CreateSurvey() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

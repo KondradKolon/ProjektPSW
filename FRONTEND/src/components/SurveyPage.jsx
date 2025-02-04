@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from "../AuthContext"; // Importujemy useAuth
 import { useNavigate } from "react-router-dom";
+import SurveyComments from './SurveyComments';
 function SurveyPage() {
     const { id } = useParams(); // Pobieramy ID ankiety z URL
     const [survey, setSurvey] = useState(null);
@@ -20,6 +21,7 @@ function SurveyPage() {
                 // pobieranie zapytan z ankiety
                 const questionsResponse = await fetch(`http://127.0.0.1:5000/questions?survey_id=${id}`);
                 const questionsData = await questionsResponse.json();
+                console.log(questionsResponse)
                 setQuestions(questionsData); 
             } catch (error) {
                 console.error("Błąd pobierania danych:", error);
@@ -119,7 +121,9 @@ function SurveyPage() {
     </div>
 ))}
 <button onClick={handleSubmit}>Zapisz odpowiedzi</button>
+        <SurveyComments surveyId={survey.id} />
         </div>
+        
     );
 }
 

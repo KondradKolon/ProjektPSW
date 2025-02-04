@@ -5,7 +5,7 @@ import Logo2 from '../assets/Logo2.png';
 import menu from '../assets/menu.png';
 import user1 from '../assets/user.png';
 import '../styles/Header.css';
-
+import SearchBar from './SearchBar';
 export default function Header() {
   const { user,logout } = useAuth(); 
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -38,11 +38,11 @@ export default function Header() {
           </div>
         )}
       </div>
-
+        
       <div className="logo">
         <img src={Logo2} alt="logo" />
       </div>
-
+      <SearchBar/>
       <div className="user" ref={userRef} onClick={() => setUserOpen(!isUserOpen)}>
         <img src={user1} alt="user" />
         {isUserOpen && (

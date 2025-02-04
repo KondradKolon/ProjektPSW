@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken';
+import http from 'http';
+import WebSocket from 'ws';
 dotenv.config();
 
 const app = express();
@@ -22,13 +24,34 @@ const supabase = createClient(
     }
   }
 );
+app.use(express.json({ strict: false }));
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
 }));
+
+const server = http.createServer(app);
+
+// Tworzymy WebSocket Server, który działa na tym samym serwerze
+const wss = new WebSocket.Server({ server });
+
+// Nasłuchujemy na połączenia WebSocket
+wss.on('connection', (ws) => {
+  console.log('Nowe połączenie WebSocket');
+  
+  ws.on('message', (message) => {
+    console.log(`Otrzymano wiadomość: ${message}`);
+  });
+
+  ws.on('close', () => {
+    console.log('Połączenie WebSocket zamknięte');
+  });
+});
+
+
 
 // Middleware autentykacji
 const authenticate = async (req, res, next) => {
@@ -79,7 +102,81 @@ app.post('/surveys', authenticate, async (req, res) => {
   }
 });
 // Pobranie wszystkich ankiet
+app.get('/surveys/search', async (req, res) => {
+    const { q } = req.query; // Sprawdzamy, czy jest parametr q
+    console.log("XD, request dotarł do endpointu!");
+    console.log("Query params:", req.query);
+
+    if (!q) {
+        return res.status(400).json({ message: "Brak parametru wyszukiwania." });
+    }
+
+    try {
+        console.log("Zapytanie do Supabase...");
+
+        const { data, error } = await supabase
+            .from('surveys')
+            .select('*')
+            .ilike('title', `%${q}%`); // Wyszukiwanie po tytule
+
+        if (error) {
+            console.error("Błąd Supabase:", error);
+            return res.status(500).json({ message: 'Błąd Supabase' });
+        }
+
+        console.log("Zwrócone dane z Supabase:", data);
+
+        if (!data || data.length === 0) {
+            console.log("Brak pasujących ankiet.");
+            return res.status(404).json({ message: 'Nie znaleziono ankiet.' });
+        }
+
+        return res.status(200).json(data);
+
+    } catch (error) {
+        console.error("Błąd serwera:", error);
+        return res.status(500).json({ message: 'Błąd serwera' });
+    }
+});
+app.post('/surveys/:surveyId/comments', async (req, res) => {
+    const { surveyId } = req.params;
+    const { content, author_id } = req.body;
+  
+    if (!content || !author_id) {
+      return res.status(400).json({ message: 'Brak wymaganych danych' });
+    }
+  
+    try {
+      // Zapisz komentarz w bazie danych
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([{ survey_id: surveyId, content, author_id }]);
+  
+      if (error) {
+        console.error('Błąd zapisywania komentarza:', error);
+        return res.status(500).json({ message: 'Błąd przy zapisywaniu komentarza' });
+      }
+  
+      // Po zapisaniu komentarza, wyślij go do wszystkich połączonych klientów przez WebSocket
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'new-comment',
+            surveyId,
+            comment: { content, author_id }
+          }));
+        }
+      });
+  
+      res.status(200).json({ message: 'Komentarz dodany', data });
+    } catch (error) {
+      console.error('Błąd:', error);
+      res.status(500).json({ message: 'Błąd przy przetwarzaniu zapytania' });
+    }
+  });
+
 app.get('/surveys', async (req, res) => {
+    console.log("xd")
     try {
       const { data: surveys, error } = await supabase.from('surveys').select('*');
       if (error) throw error;
@@ -469,7 +566,7 @@ app.post('/questions', async (req, res) => {
 });
 
 app.get('/questions', async (req, res) => {
-    const { survey_id } = req.query; // Pobieramy survey_id z zapytania
+    const { survey_id } = req.query; 
 
     if (!survey_id) {
         return res.status(400).json({ message: 'Brak survey_id w zapytaniu.' });
@@ -496,6 +593,21 @@ app.get('/questions', async (req, res) => {
         res.status(500).json({ message: 'Wystąpił błąd podczas przetwarzania zapytania.' });
     }
 });
+
+
+
+
+
+
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+        console.log(r.route.path);
+    }
+});
+
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Serwer działa na porcie ${PORT}`);
