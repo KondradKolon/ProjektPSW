@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from "../AuthContext"; // Importujemy useAuth
 import { useNavigate } from "react-router-dom";
-import SurveyComments from './SurveyComments';
+import ChatWindow from './Czat';
 function SurveyPage() {
     const { id } = useParams(); // Pobieramy ID ankiety z URL
     const [survey, setSurvey] = useState(null);
@@ -121,7 +121,8 @@ function SurveyPage() {
     </div>
 ))}
 <button onClick={handleSubmit}>Zapisz odpowiedzi</button>
-        <SurveyComments surveyId={survey.id} />
+        <h1>komentarze</h1>
+        <ChatWindow />
         </div>
         
     );

@@ -6,8 +6,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken';
-import http from 'http';
-import WebSocket from 'ws';
+import mqtt from 'mqtt';
 dotenv.config();
 
 const app = express();
@@ -33,23 +32,27 @@ app.use(cors({
   credentials: true,
 }));
 
-const server = http.createServer(app);
 
-// Tworzymy WebSocket Server, który działa na tym samym serwerze
-const wss = new WebSocket.Server({ server });
+const mqttClient = mqtt.connect('wss://test.mosquitto.org:8081');
 
-// Nasłuchujemy na połączenia WebSocket
-wss.on('connection', (ws) => {
-  console.log('Nowe połączenie WebSocket');
-  
-  ws.on('message', (message) => {
-    console.log(`Otrzymano wiadomość: ${message}`);
-  });
 
-  ws.on('close', () => {
-    console.log('Połączenie WebSocket zamknięte');
+mqttClient.on('connect', () => {
+  console.log('Connected to MQTT Broker');
+  mqttClient.subscribe('chat', (err) => {
+    if (err) {
+      console.log('Error subscribing:', err);
+    }
   });
 });
+
+// Handling messages
+mqttClient.on('message', (topic, message) => {
+  console.log('Received message:', message.toString());
+  // Możesz wysłać wiadomość do klienta
+});
+
+
+
 
 
 
@@ -103,7 +106,7 @@ app.post('/surveys', authenticate, async (req, res) => {
 });
 // Pobranie wszystkich ankiet
 app.get('/surveys/search', async (req, res) => {
-    const { q } = req.query; // Sprawdzamy, czy jest parametr q
+    const { q } = req.query; 
     console.log("XD, request dotarł do endpointu!");
     console.log("Query params:", req.query);
 
@@ -138,8 +141,45 @@ app.get('/surveys/search', async (req, res) => {
         return res.status(500).json({ message: 'Błąd serwera' });
     }
 });
-app.post('/surveys/:surveyId/comments', async (req, res) => {
-    const { surveyId } = req.params;
+//podjeta proba zrobienia mqtt i websocketow
+// app.post('/surveys/:surveyId/comments', async (req, res) => {
+//     const { surveyId } = req.params;
+//     const { content, author_id } = req.body;
+  
+//     if (!content || !author_id) {
+//       return res.status(400).json({ message: 'Brak wymaganych danych' });
+//     }
+  
+//     try {
+//       // Zapisz komentarz w bazie danych
+//       const { data, error } = await supabase
+//         .from('comments')
+//         .insert([{ survey_id: surveyId, content, author_id }]);
+  
+//       if (error) {
+//         console.error('Błąd zapisywania komentarza:', error);
+//         return res.status(500).json({ message: 'Błąd przy zapisywaniu komentarza' });
+//       }
+  
+//       // Po zapisaniu komentarza, wyślij go do wszystkich połączonych klientów przez WebSocket
+//       wss.clients.forEach((client) => {
+//         if (client.readyState === WebSocket.OPEN) {
+//           client.send(JSON.stringify({
+//             type: 'new-comment',
+//             surveyId,
+//             comment: { content, author_id }
+//           }));
+//         }
+//       });
+  
+//       res.status(200).json({ message: 'Komentarz dodany', data });
+//     } catch (error) {
+//       console.error('Błąd:', error);
+//       res.status(500).json({ message: 'Błąd przy przetwarzaniu zapytania' });
+//     }
+//   });
+
+app.post('/chat/messages', async (req, res) => {
     const { content, author_id } = req.body;
   
     if (!content || !author_id) {
@@ -147,28 +187,27 @@ app.post('/surveys/:surveyId/comments', async (req, res) => {
     }
   
     try {
-      // Zapisz komentarz w bazie danych
+      // Zapisz wiadomość w bazie danych (przykład z Supabase)
       const { data, error } = await supabase
-        .from('comments')
-        .insert([{ survey_id: surveyId, content, author_id }]);
+        .from('messages')
+        .insert([{ content, author_id }]);
   
       if (error) {
-        console.error('Błąd zapisywania komentarza:', error);
-        return res.status(500).json({ message: 'Błąd przy zapisywaniu komentarza' });
+        console.error('Błąd zapisywania wiadomości:', error);
+        return res.status(500).json({ message: 'Błąd przy zapisywaniu wiadomości' });
       }
   
-      // Po zapisaniu komentarza, wyślij go do wszystkich połączonych klientów przez WebSocket
+    
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({
-            type: 'new-comment',
-            surveyId,
-            comment: { content, author_id }
+            type: 'new-message',
+            message: { content, author_id }
           }));
         }
       });
   
-      res.status(200).json({ message: 'Komentarz dodany', data });
+      res.status(200).json({ message: 'Wiadomość dodana', data });
     } catch (error) {
       console.error('Błąd:', error);
       res.status(500).json({ message: 'Błąd przy przetwarzaniu zapytania' });
