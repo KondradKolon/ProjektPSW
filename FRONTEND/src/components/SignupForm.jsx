@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+//SIGNUP FORM
 const SignUpForm = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -21,7 +21,7 @@ const SignUpForm = () => {
             const data = await response.json();
 
             if (response.ok) {
-                navigate('/login'); // Przekieruj do logowania po rejestracji
+                navigate('/login');
             } else {
                 setError(data.message || 'Błąd rejestracji');
             }

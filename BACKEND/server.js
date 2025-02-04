@@ -1,59 +1,83 @@
-// server.js
 import express from 'express';
 import bodyParser from 'body-parser';
-import jwt from 'jsonwebtoken'; // Dodaj tę linię
-import cookieParser from 'cookie-parser'; // Dodaj tę linię
-import bcrypt from 'bcryptjs';
+import cookieParser from 'cookie-parser';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-
+import cors from 'cors';
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken';
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET;
+
+// Inicjalizacja Supabase z SERVICE KEY
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
 app.use(bodyParser.json());
 app.use(cookieParser());
-
-
-
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-import cors from 'cors';
-
 app.use(cors({
-    origin: 'http://localhost:5173', // Adres Twojego frontendu
-    credentials: true, // Zezwól na ciasteczka
+  origin: 'http://localhost:5173',
+  credentials: true,
 }));
-//-------------------------------------------------------------------------------------------------------------------------------------
-// CRUD DLA ANKIET 
 
-// Create - dodanie nowej ankiety
-// 
-// Tworzenie ankiety
-app.post('/surveys', async (req, res) => {
-    const { title, description, author_id, questions } = req.body;
-    try {
-        // Dodanie nowej ankiety do bazy danych
-        const { data: newSurvey, error } = await supabase
-            .from('surveys')
-            .insert([{ title, description, author_id, questions }])
-            .select('*')  // Zapewnia, że zwrócimy wszystkie pola dodanego rekordu
-            .single();  // Oczekujemy tylko jednej ankiety
+// Middleware autentykacji
+const authenticate = async (req, res, next) => {
+    const authHeader = req.headers.authorization || req.cookies.token;
 
-        if (error) throw error;
-
-        // Zwróć dane nowej ankiety
-        res.status(201).json(newSurvey);
-    } catch (error) {
-        console.error("Błąd przy tworzeniu ankiety:", error);
-        res.status(500).json({ message: 'Błąd serwera' });
+    if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Brak tokenu autoryzacyjnego' });
     }
-});
 
+    const token = authHeader.split(' ')[1] || authHeader;
+
+    try {
+        // Weryfikacja tokenu JWT
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Ustawienie danych użytkownika w req.user
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.error('Błąd autentykacji:', error);
+        res.status(401).json({ message: 'Nieprawidłowy token' });
+    }
+};
+
+// CRUD dla ankiet
+app.post('/surveys', authenticate, async (req, res) => {
+  try {
+    const { title, description} = req.body;
+    
+    if (!title?.trim()) {
+      return res.status(400).json({ message: 'Nieprawidłowe dane ankiety' });
+    }
+
+    const { data, error } = await supabase
+      .from('surveys')
+      .insert([{
+        title: title.trim(),
+        description: description?.trim(),
+        author_id: req.user.id
+      }])
+      .select('*');
+
+    if (error) throw error;
+    res.status(201).json(data[0]);
+  } catch (error) {
+    console.error('Błąd tworzenia ankiety:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 // Pobranie wszystkich ankiet
 app.get('/surveys', async (req, res) => {
     try {
@@ -94,30 +118,29 @@ app.patch('/surveys/:id', async (req, res) => {
     const { title, description, author_id, questions } = req.body;
 
     try {
-        // Wyszukiwanie ankiety w bazie danych po ID
+        
         const { data: survey, error } = await supabase
             .from('surveys')
             .select('*')
             .eq('id', id)
-            .single(); // Oczekujemy tylko jednej ankiety
+            .single();
 
         if (error || !survey) {
             return res.status(404).json({ message: 'Ankieta nie znaleziona.' });
         }
 
-        // Aktualizacja ankiety w bazie danych
+     
         const { data: updatedSurvey, error: updateError } = await supabase
             .from('surveys')
             .update({ title, description, author_id, questions })
             .eq('id', id)
-            .select('*') // Zapewnienie, że zwróci wszystkie zaktualizowane dane
-            .single(); // Oczekujemy tylko jednej ankiety
+            .select('*') 
+            .single(); 
 
         if (updateError) {
             return res.status(500).json({ message: 'Błąd serwera przy aktualizacji ankiety', details: updateError.message });
         }
 
-        // Zwróć zaktualizowaną ankietę
         res.json(updatedSurvey);
     } catch (error) {
         console.error("Błąd przy aktualizacji ankiety:", error);
@@ -135,18 +158,17 @@ app.delete('/surveys/:id', async (req, res) => {
             .delete()
             .eq('id', id);
 
-        // Jeśli wystąpił błąd
         if (error) {
             return res.status(500).json({ message: 'Błąd przy usuwaniu ankiety', details: error.message });
         }
 
-        // Sprawdzenie, czy ankieta została faktycznie usunięta
+        // sprawdzamy czy zostala usunieta
         const { data } = await supabase
             .from('surveys')
             .select('*')
             .eq('id', id);
 
-        // Jeśli ankieta nie została znaleziona po próbie usunięcia
+        // jesli brak ankiety to rip blad
         if (data.length === 0) {
             return res.status(200).json({ message: 'Ankieta usunięta.' });
         }
@@ -162,70 +184,82 @@ app.delete('/surveys/:id', async (req, res) => {
 //-------------------------------------------------------------------------------------------------------------------------------------
 
 //CRUD DLA USERÓW
-
-// Endpoint rejestracji użytkownika
 // Endpoint rejestracji użytkownika
 app.post('/users', async (req, res) => {
-    console.log("Otrzymano żądanie rejestracji:", req.body)
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-        return res.status(400).json({ message: 'Wymagane pola: name, email, password' });
+    // Walidacja danych
+    const errors = [];
+    if (!name) errors.push('Pole "name" jest wymagane');
+    if (!email) errors.push('Pole "email" jest wymagane');
+    if (!password) errors.push('Pole "password" jest wymagane');
+    
+    if (errors.length > 0) {
+        return res.status(400).json({ errors });
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: 'Nieprawidłowy format emaila' });
+    //jakis regex to sprawdzania poprawnego formatu maila 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ message: 'Nieprawidłowy format email' });
     }
 
     try {
-        // Sprawdzenie, czy użytkownik już istnieje
-        const { data: existingUser, error: existingUserError } = await supabase
+        // sprawdzamy uniklanosc maila
+        const { data: existingUser, error: fetchError } = await supabase
             .from('users')
             .select('id')
             .eq('email', email)
-            .maybeSingle();  // ⬅ Zmiana na `maybeSingle()`, żeby obsłużyć brak wyniku
+            .maybeSingle();
 
-        if (existingUserError) {
-            console.error("Błąd przy sprawdzaniu użytkownika:", existingUserError);
-            return res.status(500).json({ message: 'Błąd serwera', details: existingUserError.message });
-        }
-
+        if (fetchError) throw fetchError;
         if (existingUser) {
-            return res.status(400).json({ message: 'Użytkownik o tym emailu już istnieje' });
+            return res.status(409).json({ message: 'Użytkownik już istnieje' });
         }
 
+        // hashowanie hasla
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Dodanie użytkownika do bazy
-        const { error: insertError } = await supabase
+        // nowy user
+        const { data: newUser, error: insertError } = await supabase
             .from('users')
-            .insert([{ name, email, password: hashedPassword }]);
+            .insert([{ 
+                name, 
+                email, 
+                password: hashedPassword,
+                created_at: new Date().toISOString() 
+            }])
+            .select('id, name, email, created_at')
+            .single();
 
-        if (insertError) {
-            console.error("Błąd przy dodawaniu użytkownika:", insertError);
-            return res.status(500).json({ message: 'Błąd serwera', details: insertError.message });
-        }
+        if (insertError) throw insertError;
 
-        // 🔹 Wymuszone pobranie nowo dodanego użytkownika
-        const { data: newUser, error: fetchError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();  // ⬅ Pobranie 1 wyniku, który ma pasować do wstawionego
+        const token = jwt.sign(
+            { 
+                id: newUser.id,
+                email: newUser.email,
+                name: newUser.name 
+            }, 
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
-        if (fetchError || !newUser) {
-            console.error("Błąd przy pobieraniu nowego użytkownika:", fetchError);
-            return res.status(500).json({ message: 'Błąd serwera: nie udało się pobrać nowo dodanego użytkownika' });
-        }
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, //czas zycia ciacha XD
+            sameSite: 'Strict',
+        });
 
-        console.log("✅ Nowy użytkownik:", newUser); // Debugowanie
-
-        res.status(201).json({ id: newUser.id, name: newUser.name, email: newUser.email });
+        res.status(201).json({
+            ...newUser,
+            token
+        });
 
     } catch (error) {
-        console.error("❌ Błąd w kodzie:", error);
-        res.status(500).json({ message: 'Błąd serwera' });
+        console.error('Błąd rejestracji:', error);
+        res.status(500).json({ 
+            message: error.message || 'Wewnętrzny błąd serwera',
+            details: error.details || null
+        });
     }
 });
 
@@ -258,7 +292,6 @@ app.get('/users/:id', async (req, res) => {
 
     res.json(user);
 });
-
 
 // Update - aktualizacja użytkownika po ID
 app.patch('/users/:id', async (req, res) => {
@@ -294,63 +327,65 @@ app.delete('/users/:id', async (req, res) => {
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------
-// Endpoint do logowania
 
 // Endpoint do logowania
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-  
-    // Wyszukaj użytkownika w Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-  
-    if (error || !user) {
-      return res.status(401).json({ message: 'Nieprawidłowy email lub hasło' });
-    }
-  
+
     try {
-      // Porównanie hasła
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-        return res.status(401).json({ message: 'Nieprawidłowy email lub hasło' });
-      }
-  
-      // Generowanie tokena JWT
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-      res.cookie('token', token, { httpOnly: true });
-  
-      res.json({ message: 'Zalogowano pomyślnie', token });
+        // 1. Znajdź użytkownika w TWOJEJ tabeli users
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (userError || !user) {
+            return res.status(401).json({ message: 'Nieprawidłowe dane logowania' });
+        }
+
+        // 2. Sprawdź hasło
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ message: 'Nieprawidłowe dane logowania' });
+        }
+
+        // 3. Generuj token JWT
+        const token = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // 4. Zwróć token i dane użytkownika
+        res.json({
+            message: 'Zalogowano pomyślnie',
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            }
+        });
     } catch (error) {
-      console.error("Błąd przy logowaniu:", error);
+        console.error("Błąd przy logowaniu:", error);
+        res.status(500).json({ message: 'Błąd serwera' });
+    }
+});
+  
+  app.post('/logout', authenticate, async (req, res) => {
+    try {
+      await supabase.auth.signOut();
+      res.json({ message: 'Wylogowano pomyślnie' });
+    } catch (error) {
+      console.error('Błąd wylogowywania:', error);
       res.status(500).json({ message: 'Błąd serwera' });
     }
   });
-
-
-// Middleware do weryfikacji tokenu
-const authenticate = (req, res, next) => {
-    const token = req.cookies.token; // Pobieranie tokena z ciasteczek
-
-    if (!token) {
-        return res.status(401).json({ message: 'Brak tokenu, dostęp zabroniony' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: 'Nieprawidłowy token, dostęp zabroniony' });
-    }
-};
-
 app.get('/profile', authenticate, async (req, res) => {
     const { data: user, error } = await supabase
         .from('users')
-        .select('id, name, email') // Pomijamy hasło!
+        .select('id, name, email') 
         .eq('id', req.user.id)
         .single();
 
@@ -361,10 +396,105 @@ app.get('/profile', authenticate, async (req, res) => {
     res.json(user);
 });
 
-//Wylogowywanie sie
-app.post('/logout', (req, res) => {
-    res.clearCookie('token', { path: '/' });
-    res.json({ message: 'Wylogowano pomyślnie' });
+
+
+app.post('/answers', async (req, res) => {
+    const { surveyId, answers, userId } = req.body;
+
+    // Sprawdzenie, czy wszystkie wymagane dane zostały przekazane
+    if (!surveyId || !answers || !userId) {
+        return res.status(400).json({ message: 'Brak wymaganych danych' });
+    }
+
+    try {
+        const insertPromises = Object.keys(answers).map(async (questionId) => {
+            const answer = answers[questionId];
+            
+            const { data, error } = await supabase
+                .from('answers')
+                .insert([
+                    {
+                        survey_id: surveyId,
+                        user_id: userId,
+                        question_id: questionId,
+                        answer: answer,
+                    },
+                ]);
+
+            if (error) {
+                throw new Error(error.message);
+            }
+        });
+
+        
+        await Promise.all(insertPromises);
+
+        // jesli promise git
+        res.status(200).json({ message: 'Odpowiedzi zapisane pomyślnie!' });
+    } catch (error) {
+        console.error('Błąd zapisywania odpowiedzi:', error);
+        res.status(500).json({ message: 'Wystąpił błąd przy zapisywaniu odpowiedzi.' });
+    }
+});
+
+app.post('/questions', async (req, res) => {
+    const { survey_id, question_text, question_type, options } = req.body;
+
+    try {
+        const { data, error } = await supabase
+            .from('questions')
+            .insert([{
+                survey_id: survey_id,
+                question_text: question_text,
+                question_type: question_type,
+                options: question_type === 'options' ? options : null
+            }])
+            .select();
+
+        if (error) {
+            console.error('Błąd podczas insercji:', error);
+            throw new Error(error.message);
+        }
+
+        if (!data || data.length === 0) {
+            console.error('Brak danych w odpowiedzi!');
+            return res.status(500).json({ message: 'Brak danych po zapisaniu pytania.' });
+        }
+        console.log('Zapisane pytanie:', data[0])
+        res.status(201).json(data[0]);  
+    } catch (error) {
+        console.error('Błąd tworzenia pytania:', error);
+        res.status(500).json({ message: 'Wystąpił błąd przy tworzeniu pytania.' });
+    }
+});
+
+app.get('/questions', async (req, res) => {
+    const { survey_id } = req.query; // Pobieramy survey_id z zapytania
+
+    if (!survey_id) {
+        return res.status(400).json({ message: 'Brak survey_id w zapytaniu.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('survey_id', survey_id);  // Filtrujemy pytania po survey_id
+
+        if (error) {
+            console.error('Błąd pobierania pytań:', error);
+            return res.status(500).json({ message: 'Wystąpił problem podczas pobierania pytań.' });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ message: 'Brak pytań dla tej ankiety.' });
+        }
+
+        res.status(200).json(data); // Zwracamy pytania
+    } catch (error) {
+        console.error('Błąd:', error);
+        res.status(500).json({ message: 'Wystąpił błąd podczas przetwarzania zapytania.' });
+    }
 });
 
 app.listen(PORT, () => {

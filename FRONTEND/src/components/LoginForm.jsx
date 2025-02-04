@@ -1,41 +1,44 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://127.0.0.1:5000/login', {
+            const response = await fetch('http://localhost:5000/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
-                credentials: 'include', // ciasteczka
             });
 
             const data = await response.json();
 
-            if (response.ok) {
-                navigate('/');
-            } else {
-                setError(data.message || 'Błąd logowania');
+            if (!response.ok) {
+                throw new Error(data.message || 'Błąd logowania');
             }
+
+            login(data.user, data.token); // Pass user and token to context on successful login
+            navigate('/'); // Redirect to home page
+
         } catch (err) {
-            setError('Błąd połączenia z serwerem');
+            setError(err.message || 'Błąd połączenia z serwerem');
         }
     };
 
     return (
-        <div>
+        <div className="login-container">
             <h2>Logowanie</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
+            {error && <div className="error-message">{error}</div>}
+            <form onSubmit={handleSubmit} className="login-form">
+                <div className="form-group">
                     <label>Email:</label>
                     <input
                         type="email"
@@ -44,7 +47,7 @@ const LoginForm = () => {
                         required
                     />
                 </div>
-                <div>
+                <div className="form-group">
                     <label>Hasło:</label>
                     <input
                         type="password"
@@ -53,8 +56,11 @@ const LoginForm = () => {
                         required
                     />
                 </div>
-                <button type="submit">Zaloguj</button>
+                <button type="submit">Zaloguj się</button>
             </form>
+            <div className="register-link">
+                Nie masz konta? <Link to="/signup">Zarejestruj się</Link>
+            </div>
         </div>
     );
 };

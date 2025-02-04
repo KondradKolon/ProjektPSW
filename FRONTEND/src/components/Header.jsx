@@ -1,43 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import Logo2 from '../assets/Logo2.png';
 import menu from '../assets/menu.png';
-import user from '../assets/user.png';
+import user1 from '../assets/user.png';
 import '../styles/Header.css';
 
 export default function Header() {
+  const { user,logout } = useAuth(); 
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isUserOpen, setUserOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setMenuOpen(false);
-        setUserOpen(false);
-      }
-    };
+  const menuRef = useRef(null);
+  const userRef = useRef(null);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+  useEffect(() => {
+  
   }, []);
 
-  const toggleDropdown = (dropdownType) => {
-    if (dropdownType === 'menu') {
-      setMenuOpen(!isMenuOpen);
-      setUserOpen(false);
-    } else if (dropdownType === 'user') {
-      setUserOpen(!isUserOpen);
-      setMenuOpen(false);
-    }
+  const handleLogout = () => {
+    logout();
+    setUserOpen(false);
+    document.cookie = 'token=; path=/; max-age=0'; //clear token and remove local storage
+    localStorage.removeItem('user'); 
   };
 
   return (
     <header className="header">
-
-      <div className="menu" ref={dropdownRef} onClick={() => toggleDropdown('menu')}>
+      <div className="menu" ref={menuRef} onClick={() => setMenuOpen(!isMenuOpen)}>
         <img src={menu} alt="menu" />
         {isMenuOpen && (
           <div className="dropdown">
@@ -54,14 +43,18 @@ export default function Header() {
         <img src={Logo2} alt="logo" />
       </div>
 
-      <div className="user" ref={dropdownRef} onClick={() => toggleDropdown('user')}>
-        <img src={user} alt="user" />
+      <div className="user" ref={userRef} onClick={() => setUserOpen(!isUserOpen)}>
+        <img src={user1} alt="user" />
         {isUserOpen && (
           <div className="dropdown">
             <ul>
               <li><Link to="/profile" onClick={() => setUserOpen(false)}>My Profile</Link></li>
               <li><Link to="/surveys" onClick={() => setUserOpen(false)}>My Surveys</Link></li>
-              <li onClick={() => { navigate('/login'); setUserOpen(false); }}>Login</li>
+              {user ? (
+                <li onClick={handleLogout}>Logout</li>
+              ) : (
+                <li><Link to="/login" onClick={() => setUserOpen(false)}>Login</Link></li>
+              )}
             </ul>
           </div>
         )}
