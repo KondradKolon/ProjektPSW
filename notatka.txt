@@ -1,0 +1,13 @@
+// jedyne co dodano w commicie o 00:51
+import http from 'http'; 
+import WebSocket from 'ws'; 
+const server = http.createServer(app)
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws) => {
+  console.log('Nowe połączenie WebSocket');
+  ws.on('message', (message) => {
+    console.log('Otrzymano wiadomość:', message);
+  });
+  ws.send('Witaj w WebSocket!');
+});
+// dodac w server .js i dziala wszystko (w ostatniej chwili cos sie zepsuło i websockety nie dzialaly)
