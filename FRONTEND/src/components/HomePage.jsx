@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import SurveyList from './SurveyList';
-
+import ChatWindow from './Czat';
 const HomePage = () => {
     const navigate = useNavigate();
     const { user, token } = useAuth();
@@ -18,6 +18,7 @@ const HomePage = () => {
     return (
         <div>
             <SurveyList />
+            <ChatWindow />
             <button onClick={handleCreateSurveyClick}>Stwórz Ankietę</button>
         </div>
     );

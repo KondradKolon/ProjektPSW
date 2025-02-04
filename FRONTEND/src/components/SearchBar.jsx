@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/SearchBar.css'; // Importujemy plik CSS
+import '../styles/SearchBar.css'; 
 
 function SearchBar() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -49,8 +49,8 @@ function SearchBar() {
     }, [searchTerm]);
 
     const handleSurveyClick = (surveyId) => {
-        setSearchTerm(''); // Resetowanie paska wyszukiwania
-        setSearchResults([]); // Ukrywanie wyników po kliknięciu
+        setSearchTerm(''); 
+        setSearchResults([]); 
         navigate(`/survey/${surveyId}`);
     };
 
