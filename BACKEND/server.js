@@ -7,6 +7,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken';
 import mqtt from 'mqtt';
+
 dotenv.config();
 
 const app = express();
@@ -31,8 +32,21 @@ app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
 }));
+// jedyne co dodano w commicie o 00:51
+import http from 'http'; 
+import WebSocket from 'ws'; 
+const server = http.createServer(app)
+const wss = new WebSocket.Server({ server });
+wss.on('connection', (ws) => {
+  console.log('Nowe połączenie WebSocket');
+  ws.on('message', (message) => {
+    console.log('Otrzymano wiadomość:', message);
+  });
+  ws.send('Witaj w WebSocket!');
+});
+//
 
-
+app.use(express.json());
 const mqttClient = mqtt.connect('wss://test.mosquitto.org:8081');
 
 
@@ -203,7 +217,9 @@ app.post('/chat/messages', async (req, res) => {
           client.send(JSON.stringify({
             type: 'new-message',
             message: { content, author_id }
+            
           }));
+          console.error('WebSocket client is not open');
         }
       });
   
@@ -431,11 +447,11 @@ app.get('/users/:id', async (req, res) => {
 
 // Update - aktualizacja użytkownika po ID
 app.patch('/users/:id', async (req, res) => {
-    const { name, email } = req.body;
+    const { name, email,role } = req.body;
 
     const { data: updatedUser, error } = await supabase
         .from('users')
-        .update({ name, email })
+        .update({ name, email,role })
         .eq('id', req.params.id)
         .select()
         .single();
@@ -500,7 +516,8 @@ app.post('/login', async (req, res) => {
             user: {
                 id: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
         });
     } catch (error) {
@@ -537,21 +554,21 @@ app.get('/profile', authenticate, async (req, res) => {
 app.post('/answers', async (req, res) => {
     const { surveyId, answers, userId } = req.body;
 
-    // Sprawdzenie, czy wszystkie wymagane dane zostały przekazane
-    if (!surveyId || !answers || !userId) {
+    // sprawdzamy czy mamy dane (pozwalamy na `null` dla userId)
+    if (!surveyId || !answers) {
         return res.status(400).json({ message: 'Brak wymaganych danych' });
     }
 
     try {
         const insertPromises = Object.keys(answers).map(async (questionId) => {
             const answer = answers[questionId];
-            
+
             const { data, error } = await supabase
                 .from('answers')
                 .insert([
                     {
                         survey_id: surveyId,
-                        user_id: userId,
+                        user_id: userId || null, // Jeśli brak userId, zapisujemy jako null
                         question_id: questionId,
                         answer: answer,
                     },
@@ -562,16 +579,15 @@ app.post('/answers', async (req, res) => {
             }
         });
 
-        
         await Promise.all(insertPromises);
 
-        // jesli promise git
         res.status(200).json({ message: 'Odpowiedzi zapisane pomyślnie!' });
     } catch (error) {
         console.error('Błąd zapisywania odpowiedzi:', error);
         res.status(500).json({ message: 'Wystąpił błąd przy zapisywaniu odpowiedzi.' });
     }
 });
+
 
 app.post('/questions', async (req, res) => {
     const { survey_id, question_text, question_type, options } = req.body;
@@ -633,11 +649,53 @@ app.get('/questions', async (req, res) => {
     }
 });
 
+//rating endpoint
+app.post('/update-survey-rating', async (req, res) => {
+    const { surveyId, rating } = req.body;
+
+    if (!surveyId || rating === undefined) {
+        return res.status(400).json({ error: 'Missing surveyId or rating' });
+    }
+
+    try {
+        // fetch current rating
+        const { data, error } = await supabase
+            .from('surveys')
+            .select('rating, rating_count')
+            .eq('id', surveyId)
+            .single();
+
+        if (error || !data) {
+            return res.status(404).json({ error: 'Survey not found' });
+        }
+
+        const { rating: currentRating, rating_count: ratingCount } = data;
+
+        // new rating
+        const newRating = ((currentRating * ratingCount) + rating) / (ratingCount + 1);
+
+        // update
+        const { error: updateError } = await supabase
+            .from('surveys')
+            .update({ rating: newRating, rating_count: ratingCount + 1 })
+            .eq('id', surveyId);
+
+        if (updateError) {
+            throw updateError;
+        }
+
+        res.status(200).json({ message: 'Survey rating updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 
 
 
+
+//testing 
 app._router.stack.forEach((r) => {
     if (r.route && r.route.path) {
         console.log(r.route.path);

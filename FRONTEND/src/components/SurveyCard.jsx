@@ -12,7 +12,7 @@ export default function SurveyCard({ id, title, description, rating }) {
         <div className="survey-card">
             <h3>{title}</h3>
             <p>{description}</p>
-            <p>Rating: {rating}</p>
+            <p>Rating: {rating.toFixed(1)}</p>
             <button onClick={handleFillSurvey}>Wypełnij ankietę</button>
         </div>
     );

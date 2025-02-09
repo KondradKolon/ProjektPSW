@@ -8,6 +8,9 @@ import HomePage from './HomePage';
 import CreateSurvey from './CreateSurvey';
 import SurveyPage from './SurveyPage';
 import ProfilePage from './ProfilePage';
+import FilteredList from './SurveyUserList'
+import AdminPanel from './AdminPanel';
+import SurveyStats from './SurveyStats';
 function App() {
     return (
         <Router>
@@ -20,6 +23,9 @@ function App() {
                     <Route path="/create-survey" element={<CreateSurvey />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/survey/:id" element={<SurveyPage />} />
+                    <Route path="/mySurveys" element={<FilteredList />} />
+                    <Route path="/admin" element={<AdminPanel />} />
+                    <Route path="/survey/:id/statistics" element={<SurveyStats />} />
                 </Routes>
                 <Footer />
             </AuthProvider>
