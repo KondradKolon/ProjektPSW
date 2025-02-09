@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext"; // Importujemy useAuth
-
+import { surveyTemplates } from "../assets/Templates"
 export default function CreateSurvey() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -11,8 +11,11 @@ export default function CreateSurvey() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const { user, token } = useAuth(); // Pobieramy dane użytkownika i token z kontekstu
+    const [selectedTemplate, setSelectedTemplate] = useState(""); //tamplety do jakis defautowych ankiet
 
+    
     // Funkcje obsługujące pytania
+
     const handleQuestionTextChange = (id, text) => {
         setQuestions(prev => prev.map(q => q.id === id ? { ...q, text } : q));
     };
@@ -163,6 +166,23 @@ export default function CreateSurvey() {
             alert(error.message || 'Wystąpił błąd');
         }
     };
+
+    const handleTemplateChange = (event) => {
+        const selectedTitle = event.target.value;
+        setSelectedTemplate(selectedTitle);
+
+        const template = surveyTemplates.find(t => t.title === selectedTitle);
+        if (template) {
+            setTitle(template.title);
+            setDescription(template.description);
+            setQuestions(template.questions);
+        }
+    };
+
+
+
+
+
     if (loading) {
         return <div className="loading">Weryfikacja sesji...</div>;
     }
@@ -173,7 +193,15 @@ export default function CreateSurvey() {
 
     return (
         <div className="create-survey-container">
-            
+            <div className="input-group">
+                <label>Use a Template:</label>
+                <select value={selectedTemplate} onChange={handleTemplateChange}>
+                    <option value="">-- Select a Template --</option>
+                    {surveyTemplates.map((template, index) => (
+                        <option key={index} value={template.title}>{template.title}</option>
+                    ))}
+                </select>
+            </div>
             
             <div className="form-section">
                 <div className="input-group">

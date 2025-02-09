@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
                 setToken(null);
             }
-        }, 1000);
+        }, 0);
     }, []); // Tylko przy pierwszym renderowaniu komponentu
     
     const login = (userData, token) => {

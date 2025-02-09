@@ -73,7 +73,7 @@ function SearchBar() {
                     ))}
                 </ul>
             ) : (
-                <p>Brak wyników wyszukiwania.</p>
+                <p></p> //
             )}
         </div>
     );

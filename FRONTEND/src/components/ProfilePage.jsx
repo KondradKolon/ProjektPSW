@@ -43,6 +43,7 @@ const ProfilePage = () => {
 
     const handleDeleteClick = async () => {
         const confirmDelete = window.confirm("Na pewno chcesz usunąć konto?");
+        
         if (confirmDelete) {
             try {
                 const response = await fetch(`http://127.0.0.1:5000/users/${user.id}`, {

@@ -29,6 +29,7 @@ const ChatWindow = () => {
     });
 
     mqttClient.on('message', (topic, message) => {
+    console.log('Received message:', message.toString());
       setMessages((prevMessages) => [
         ...prevMessages,
         message.toString(),
@@ -55,7 +56,7 @@ const ChatWindow = () => {
   const handleSendMessage = async () => {
     if (client && newMessage.trim()) {
       const messageContent = newMessage.trim();
-      const authorId = user.id ; // Zmień to na dynamiczny ID użytkownika
+      const authorId = user.id ; 
 
       // Najpierw wysyłamy wiadomość do bazy danych
       const response = await fetch('http://localhost:5000/chat/messages', {
@@ -89,7 +90,7 @@ const ChatWindow = () => {
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <h3 style={{ textAlign: 'center', color: '#333' }}>Napisz cos</h3>
+      <h3 style={{ textAlign: 'center', color: '#333' }}>Global czat</h3>
       <div style={{ marginBottom: '15px' }}>
         {messages.map((message, index) => (
           <p key={index} style={{ marginBottom: '8px', color: '#555' }}>
