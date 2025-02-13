@@ -3,33 +3,18 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
 import ChatWindow from './Czat';
-
+import useFetchData from '../hooks/useFetchData';
+import '../styles/SurveyPage.css';
 function SurveyPage() {
     const { id } = useParams();
-    const [survey, setSurvey] = useState(null);
-    const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({});
     const [rating, setRating] = useState(50); // default rating 50
     const { user, token } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchSurvey = async () => {
-            try {
-                const surveyResponse = await fetch(`http://127.0.0.1:5000/surveys/${id}`);
-                const surveyData = await surveyResponse.json();
-                setSurvey(surveyData);
+    const { survey, questions, loading, error } = useFetchData(id);
 
-                const questionsResponse = await fetch(`http://127.0.0.1:5000/questions?survey_id=${id}`);
-                const questionsData = await questionsResponse.json();
-                setQuestions(questionsData);
-            } catch (error) {
-                console.error("Błąd pobierania danych:", error);
-            }
-        };
-
-        fetchSurvey();
-    }, [id]);
+    
 
     const handleAnswerChange = (questionId, answer) => {
         setAnswers((prevAnswers) => ({
@@ -56,7 +41,7 @@ function SurveyPage() {
         }
     
         try {
-            // First POST request: Submitting answers
+            // dodajemy odpowiedzi
             const answersResponse = await fetch('http://127.0.0.1:5000/answers', {
                 method: 'POST',
                 headers: {
@@ -75,7 +60,7 @@ function SurveyPage() {
                 return;
             }
     
-            // Second POST request: Updating the survey rating (only if logged in)
+            // dodawanie ratingu
             if (rating !== null && user && token) {
                 const ratingResponse = await fetch('http://127.0.0.1:5000/update-survey-rating', {
                     method: 'POST',
@@ -105,12 +90,11 @@ function SurveyPage() {
     };
     
 
-    if (!survey || questions.length === 0) {
-        return <div>Ładowanie ankiety...</div>;
-    }
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
     return (
-        <div>
+        <div className="SurveyPage">
             <h1>{survey.title}</h1>
             <p>{survey.description}</p>
 
@@ -166,7 +150,7 @@ function SurveyPage() {
                     onChange={handleRatingChange}
                     placeholder="Wprowadź ocenę od 1 do 100"
                 />
-                <span>{rating}</span> 
+                
             </div>
 
             <button onClick={handleSubmit}>Zapisz odpowiedzi</button>

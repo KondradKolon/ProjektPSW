@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-//SIGNUP FORM
+import '../styles/SignUpForm.css'; 
+
 const SignUpForm = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -28,15 +29,14 @@ const SignUpForm = () => {
         } catch (err) {
             setError('Błąd połączenia z serwerem');
         }
-        console.log("test")
     };
 
     return (
-        <div>
+        <div className="signup-container">
             <h2>Rejestracja</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
+            {error && <div className="error-message">{error}</div>}
+            <form onSubmit={handleSubmit} className="signup-form">
+                <div className="form-group">
                     <label>Imię:</label>
                     <input
                         type="text"
@@ -45,7 +45,7 @@ const SignUpForm = () => {
                         required
                     />
                 </div>
-                <div>
+                <div className="form-group">
                     <label>Email:</label>
                     <input
                         type="email"
@@ -54,7 +54,7 @@ const SignUpForm = () => {
                         required
                     />
                 </div>
-                <div>
+                <div className="form-group">
                     <label>Hasło:</label>
                     <input
                         type="password"
@@ -63,8 +63,11 @@ const SignUpForm = () => {
                         required
                     />
                 </div>
-                <button type="submit">Zarejestruj</button>
+                <button type="submit" className="btn btn-primary">Zarejestruj</button>
             </form>
+            <div className="login-link">
+                Masz już konto? <a href="/login">Zaloguj się</a>
+            </div>
         </div>
     );
 };

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
-
+import '../styles/AdminPanel.css'
 const AdminPanel = () => {
     const { user, token } = useAuth();
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // Timeout to wait for user data to load
+    
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (!user || user.role !== 'admin') {
@@ -31,7 +30,7 @@ const AdminPanel = () => {
 
                     const data = await response.json();
                     setUsers(data);
-                    setLoading(false); // Set loading to false once users are fetched
+                    setLoading(false); 
                 } catch (error) {
                     console.error(error);
                     setLoading(false); 
@@ -39,7 +38,7 @@ const AdminPanel = () => {
             };
 
             fetchUsers();
-        }, 1000); // Timeout for 1 second to allow the user data to load
+        }, 1000); 
 
         return () => clearTimeout(timeoutId); 
     }, [user, token, navigate]);
@@ -138,7 +137,7 @@ const AdminPanel = () => {
     };
 
     return (
-        <div>
+        <div className="admin-panel">
             <h1>Admin Panel ⚙️</h1>
             <table>
                 <thead>

@@ -1,0 +1,47 @@
+
+.SurveyList {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+
+.SurveyList h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+
+.SurveyList ul {
+    list-style: none;
+    padding: 0;
+}
+
+
+.survey-item {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.button-container {
+    display: flex;
+    gap: 10px; 
+    margin-top: 10px;
+}
+
+
+.completed-surveys {
+    margin-top: 40px;
+}
+
+.completed-surveys h1 {
+    font-size: 1.5rem;
+    color: #333;
+}

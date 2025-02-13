@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import SurveyList from './SurveyList';
 import ChatWindow from './Czat';
+import Button from '@mui/material/Button';
+import '../styles/Homepage.css'
 const HomePage = () => {
     const navigate = useNavigate();
     const { user, token } = useAuth();
@@ -16,10 +18,17 @@ const HomePage = () => {
     };
 
     return (
-        <div>
+        <div className="homepage">
             <SurveyList />
-            <ChatWindow />
-            <button onClick={handleCreateSurveyClick}>Stwórz Ankietę</button>
+            <Button
+                variant="contained" 
+                color="primary" 
+                onClick={handleCreateSurveyClick}
+                style={{ margin: '0 auto' }} 
+            >
+            Create Survey
+            </Button>
+            <ChatWindow /> 
         </div>
     );
 };

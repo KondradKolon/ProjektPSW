@@ -62,7 +62,7 @@ mqttClient.on('connect', () => {
 // Handling messages
 mqttClient.on('message', (topic, message) => {
   console.log('Received message:', message.toString());
-  // Możesz wysłać wiadomość do klienta
+  
 });
 
 
@@ -155,43 +155,6 @@ app.get('/surveys/search', async (req, res) => {
         return res.status(500).json({ message: 'Błąd serwera' });
     }
 });
-//podjeta proba zrobienia mqtt i websocketow
-// app.post('/surveys/:surveyId/comments', async (req, res) => {
-//     const { surveyId } = req.params;
-//     const { content, author_id } = req.body;
-  
-//     if (!content || !author_id) {
-//       return res.status(400).json({ message: 'Brak wymaganych danych' });
-//     }
-  
-//     try {
-//       // Zapisz komentarz w bazie danych
-//       const { data, error } = await supabase
-//         .from('comments')
-//         .insert([{ survey_id: surveyId, content, author_id }]);
-  
-//       if (error) {
-//         console.error('Błąd zapisywania komentarza:', error);
-//         return res.status(500).json({ message: 'Błąd przy zapisywaniu komentarza' });
-//       }
-  
-//       // Po zapisaniu komentarza, wyślij go do wszystkich połączonych klientów przez WebSocket
-//       wss.clients.forEach((client) => {
-//         if (client.readyState === WebSocket.OPEN) {
-//           client.send(JSON.stringify({
-//             type: 'new-comment',
-//             surveyId,
-//             comment: { content, author_id }
-//           }));
-//         }
-//       });
-  
-//       res.status(200).json({ message: 'Komentarz dodany', data });
-//     } catch (error) {
-//       console.error('Błąd:', error);
-//       res.status(500).json({ message: 'Błąd przy przetwarzaniu zapytania' });
-//     }
-//   });
 
 app.post('/chat/messages', async (req, res) => {
     const { content, author_id } = req.body;
@@ -588,6 +551,34 @@ app.post('/answers', async (req, res) => {
     }
 });
 
+app.get('/answers', async (req, res) => {
+    const { survey_id } = req.query; 
+
+    if (!survey_id) {
+        return res.status(400).json({ message: 'Brak survey_id w zapytaniu.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('answers')
+            .select('*')
+            .eq('survey_id', survey_id);  // Filtrujemy odpowiedzi po survey_id
+
+        if (error) {
+            console.error('Błąd pobierania odpowiedzi:', error);
+            return res.status(500).json({ message: 'Wystąpił problem podczas pobierania odpowiedzi.' });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ message: 'Brak odpowiedzi dla tej ankiety.' });
+        }
+
+        res.status(200).json(data); 
+    } catch (error) {
+        console.error('Błąd:', error);
+        res.status(500).json({ message: 'Wystąpił błąd podczas przetwarzania zapytania.' });
+    }
+});
 
 app.post('/questions', async (req, res) => {
     const { survey_id, question_text, question_type, options } = req.body;
@@ -648,6 +639,8 @@ app.get('/questions', async (req, res) => {
         res.status(500).json({ message: 'Wystąpił błąd podczas przetwarzania zapytania.' });
     }
 });
+
+
 
 //rating endpoint
 app.post('/update-survey-rating', async (req, res) => {

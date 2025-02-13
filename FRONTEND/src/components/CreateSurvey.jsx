@@ -76,7 +76,7 @@ export default function CreateSurvey() {
         }
     }, [user, navigate]);
 
-    // Poprawione przesyłanie danych
+    // przeslanie odpowiedzi
     const handleSubmit = async () => {
         if (!user || !token) {
             alert("Nie jesteś zalogowany.");
@@ -84,7 +84,7 @@ export default function CreateSurvey() {
         }
     
         try {
-            // Walidacja danych
+            // jesli nie ma pytan to alert
             if (!title.trim() || questions.length === 0) {
                 alert('Wypełnij wszystkie wymagane pola!');
                 return;
@@ -95,7 +95,7 @@ export default function CreateSurvey() {
                 questions: questions
             });
     
-            // Walidacja pytań z opcjami (np. upewniamy się, że opcje nie są puste)
+            // sprawdzamy czy opcje nie sa puste
             for (const q of questions) {
                 if (q.type === 'options' && q.options.some(opt => !opt.trim())) {
                     alert('Wszystkie opcje muszą być wypełnione!');
@@ -115,7 +115,7 @@ export default function CreateSurvey() {
                     author_id: user.id
                 })
             });
-    
+
             if (surveyResponse.status === 401) {
                 alert("Nieautoryzowany dostęp.");
                 navigate('/login');
@@ -158,7 +158,7 @@ export default function CreateSurvey() {
                 }
             }
     
-            // Po zakończeniu, przekierowujemy użytkownika do nowej ankiety
+            // idziemy zobaczyc jak wyglada 
             navigate(`/survey/${surveyData.id}`);
     
         } catch (error) {

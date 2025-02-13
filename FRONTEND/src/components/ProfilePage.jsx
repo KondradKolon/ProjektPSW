@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext'; 
 import { useNavigate } from 'react-router-dom';
-
+import '../styles/ProfilePage.css';
 const ProfilePage = () => {
     const { user, token } = useAuth(); 
     const navigate = useNavigate();
@@ -99,7 +99,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <div>
+        <div className="profile-page">
             <h1>Profil użytkownika</h1>
             {isEditing ? (
                 <div>

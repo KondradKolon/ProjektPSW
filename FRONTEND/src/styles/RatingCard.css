@@ -27,8 +27,8 @@
 }
 
 .rating-card:hover {
-    background-color: #e0e0e0; /* Slightly darker grey */
-    border-color: #aaa; /* Darker border */
-    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.3); /* Stronger shadow */
-    cursor: pointer; /* Change cursor to pointer */
+    background-color: #e0e0e0; 
+    border-color: #aaa; 
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.3); 
+    cursor: pointer;
   }

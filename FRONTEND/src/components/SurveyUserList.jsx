@@ -3,12 +3,16 @@ import SurveyCard from "./SurveyCard";
 import { useAuth } from "../AuthContext";
 import { Link} from 'react-router-dom';
 const URL = "http://127.0.0.1:5000/surveys";
-
+import Button from '@mui/material/Button'; 
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit'; 
+import BarChartIcon from '@mui/icons-material/BarChart';
+import '../styles/SurveyUserList.css';
 export default function FilteredList() {
     const [surveyList, setSurveyList] = useState([]);
     const [loading, setLoading] = useState(true);  
     const { user } = useAuth(); 
-    
+    //pobieranie danych
     useEffect(() => {
         if (!user) return; 
 
@@ -67,10 +71,9 @@ export default function FilteredList() {
             
             <h1>{user.name}'s surveys:</h1> 
             <ul>
-                {surveyList.length > 0 ? (
+            {surveyList.length > 0 ? (
                     surveyList.map((survey) => (
-                        <>
-                            
+                        <div key={survey.id} className="survey-item">
                             <SurveyCard
                                 key={survey.id}
                                 id={survey.id}
@@ -78,16 +81,37 @@ export default function FilteredList() {
                                 description={survey.description}
                                 rating={survey.rating}
                             />
-                            <button className="Edit-button" onClick={ ()=> console.log("xd")}>Edit Survey</button>
-                            <button className="Delete-button" onClick={handleSurveyDelete}>Delete</button>
-                            <button className="Stats-button" onClick={handleSurveyDelete}>Answer's</button>
-                            <Link to={`/survey/${survey.id}/statistics`}>
-                            <button>Statistics</button>
-                            </Link>
-                        </>
-                       
-                        
-                      ))
+                            <div className="button-container">
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => console.log("Edit clicked")}
+                                    sx={{ marginRight: '10px' }}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="error" 
+                                    startIcon={<DeleteIcon />}
+                                    onClick={() => handleSurveyDelete(survey.id)}
+                                    sx={{ marginRight: '10px' }}
+                                >
+                                    Delete
+                                </Button>
+                                <Link to={`/survey/${survey.id}/statistics`} style={{ textDecoration: 'none' }}>
+                                    <Button
+                                        variant="contained"
+                                        color="secondary"
+                                        startIcon={<BarChartIcon />}
+                                    >
+                                        Statistics
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    ))
                 ) : (
                     <p>No surveys found.</p>
                 )}

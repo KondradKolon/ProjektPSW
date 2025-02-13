@@ -1,0 +1,81 @@
+
+.profile-page {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+
+.profile-page h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+
+
+.profile-info {
+    margin-bottom: 20px;
+}
+
+.profile-info p {
+    font-size: 1.1rem;
+    color: #555;
+    margin: 10px 0;
+}
+
+
+.profile-page button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.profile-page button:hover {
+    background-color: #0056b3;
+}
+
+
+.profile-page button.delete {
+    background-color: #dc3545;
+}
+
+.profile-page button.delete:hover {
+    background-color: #a71d2a;
+}
+
+
+.profile-page button.cancel {
+    background-color: #6c757d;
+}
+
+.profile-page button.cancel:hover {
+    background-color: #5a6268;
+}
+
+
+.profile-page input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+
+.loading-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #777;
+}

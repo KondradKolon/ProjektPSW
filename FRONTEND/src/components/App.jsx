@@ -25,7 +25,7 @@ function App() {
                     <Route path="/survey/:id" element={<SurveyPage />} />
                     <Route path="/mySurveys" element={<FilteredList />} />
                     <Route path="/admin" element={<AdminPanel />} />
-                    <Route path="/survey/:id/statistics" element={<SurveyStats />} />
+                    <Route path="/survey/:id/statistics" element={<SurveyStats/>} />
                 </Routes>
                 <Footer />
             </AuthProvider>
