@@ -11,7 +11,7 @@ import '../styles/SurveyUserList.css';
 export default function FilteredList() {
     const [surveyList, setSurveyList] = useState([]);
     const [loading, setLoading] = useState(true);  
-    const { user } = useAuth(); 
+    const { user ,token} = useAuth(); 
     //pobieranie danych
     useEffect(() => {
         if (!user) return; 
@@ -37,27 +37,33 @@ export default function FilteredList() {
     
 
 
-    const handleSurveyDelete = async () => {
-        const confirmDelete = window.confirm("Na pewno chcesz usunąć ankiete?");
-        if (confirmDelete) {
-            try {
-                const response = await fetch(`http://127.0.0.1:5000/survey/${survey.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    }
-                });
-
-                if (response.ok) {
-                    alert("Ankieta została usunięta zostało."); 
-                } else {
-                    alert("Nie udało się usunąć ankiety.");
-                }
-            } catch (error) {
-                console.error("Błąd usuwania ankiety:", error);
+    const handleSurveyDelete = async (id) => {
+        const confirmDelete = window.confirm("Na pewno chcesz usunąć ankietę?");
+        if (!confirmDelete) return; // Jeśli użytkownik anulował, zakończ funkcję
+    
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/surveys/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Zakładam, że `token` jest poprawnie dostępny
+                },
+            });
+    
+            if (response.ok) {
+                alert("Ankieta została usunięta."); 
+                setSurveyList((prev) => prev.filter((survey) => survey.id !== id)); // Usuń ankietę z listy lokalnej
+            } else {
+                const errorData = await response.json(); // Pobierz szczegóły błędu z odpowiedzi serwera
+                console.error("Nie udało się usunąć ankiety:", errorData.message);
+                alert(`Nie udało się usunąć ankiety: ${errorData.message}`);
             }
+        } catch (error) {
+            console.error("Błąd usuwania ankiety:", error); // Loguj błąd do konsoli
+            alert("Wystąpił błąd podczas usuwania ankiety. Spróbuj ponownie później.");
         }
     };
+    
     
 
 

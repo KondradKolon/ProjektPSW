@@ -208,12 +208,12 @@ app.get('/surveys', async (req, res) => {
   
 // Pobranie konkretnej ankiety po ID
 app.get('/surveys/:id', async (req, res) => {
-    const { id } = req.params;
+    
     try {
       const { data: survey, error } = await supabase
         .from('surveys')
         .select('*')
-        .eq('id', id)
+        .eq('id', req.params.id)
         .single();
   
       if (error || !survey) {
@@ -265,35 +265,18 @@ app.patch('/surveys/:id', async (req, res) => {
 
 // Usunięcie ankiety po ID
 app.delete('/surveys/:id', async (req, res) => {
-    const { id } = req.params;
+    const { error } = await supabase
+        .from('surveys')
+        .delete()
+        .eq('id', req.params.id);
 
-    try {
-        const { error } = await supabase
-            .from('surveys')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            return res.status(500).json({ message: 'Błąd przy usuwaniu ankiety', details: error.message });
-        }
-
-        // sprawdzamy czy zostala usunieta
-        const { data } = await supabase
-            .from('surveys')
-            .select('*')
-            .eq('id', id);
-
-        // jesli brak ankiety to rip blad
-        if (data.length === 0) {
-            return res.status(200).json({ message: 'Ankieta usunięta.' });
-        }
-
-
-    } catch (error) {
-        console.error("Błąd przy usuwaniu ankiety:", error);
-        res.status(500).json({ message: 'Błąd serwera' });
+    if (error) {
+        return res.status(404).json({ message: 'Nie udało się usunąć ankieta.' });
     }
+
+    res.json({ message: 'Ankieta usunięta.' });
 });
+
   
 
 //-------------------------------------------------------------------------------------------------------------------------------------

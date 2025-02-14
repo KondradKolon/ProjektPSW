@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { useParams } from 'react-router-dom';
-// import { Chart as ChartJS } from 'chart.js/auto';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import jsPDF from 'jspdf';
-import '../styles/SurveyStats.css'; 
+import '../styles/SurveyStats.css';
+
+// Zarejestruj wymagane komponenty Chart.js
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function SurveyStats() {
     const { id } = useParams();
@@ -169,6 +172,7 @@ export default function SurveyStats() {
                                         legend: { display: false },
                                     },
                                 }}
+                                id={`chart-${question.id}`} // Unikalny ID dla każdego wykresu
                             />
                         </div>
                     </div>
