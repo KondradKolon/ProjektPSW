@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext"; // Importujemy useAuth
 import { surveyTemplates } from "../assets/Templates"
+import '../styles/CreateSurvey.css'
 export default function CreateSurvey() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
